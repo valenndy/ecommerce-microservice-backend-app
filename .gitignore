@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Kubernetes / Tooling Binaries (do not commit large executables) ###
+kubectl
+minikube-linux-amd64
+minikube
+*.exe
+
