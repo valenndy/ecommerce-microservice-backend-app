@@ -1,0 +1,111 @@
+# Production environment values
+environment: prod
+
+replicaCount: 3
+
+image:
+  pullPolicy: Always
+  tag: "0.1.0"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+microservices:
+  - name: service-discovery
+    enabled: true
+    replicaCount: 3
+    port: 8761
+  - name: cloud-config
+    enabled: true
+    replicaCount: 3
+    port: 9296
+  - name: api-gateway
+    enabled: true
+    replicaCount: 3
+    port: 8080
+  - name: proxy-client
+    enabled: true
+    replicaCount: 3
+    port: 8900
+  - name: user-service
+    enabled: true
+    replicaCount: 3
+    port: 8700
+    database:
+      enabled: true
+      type: mysql
+  - name: product-service
+    enabled: true
+    replicaCount: 3
+    port: 8500
+    database:
+      enabled: true
+      type: mysql
+  - name: favourite-service
+    enabled: true
+    replicaCount: 3
+    port: 8800
+    database:
+      enabled: true
+      type: mysql
+  - name: order-service
+    enabled: true
+    replicaCount: 3
+    port: 8300
+    database:
+      enabled: true
+      type: mysql
+  - name: payment-service
+    enabled: true
+    replicaCount: 3
+    port: 8400
+    database:
+      enabled: true
+      type: mysql
+  - name: shipping-service
+    enabled: true
+    replicaCount: 3
+    port: 8600
+    database:
+      enabled: true
+      type: mysql
+
+configMap:
+  SPRING_PROFILES_ACTIVE: "kubernetes,prod"
+  LOGGING_LEVEL_ROOT: "WARN"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,metrics,prometheus"
+
+secrets:
+  externalSecrets:
+    enabled: true
+    backend: vault
+  database:
+    username: "ecommerce_prod"
+    password: "CHANGE_ME_IN_VAULT"
+  jwt:
+    secret: "CHANGE_ME_IN_VAULT"
+    expiration: "3600"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"

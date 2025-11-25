@@ -1,0 +1,19 @@
+apiVersion: v2
+name: ecommerce-microservices
+description: A Helm chart for e-commerce microservices deployment on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/SelimHorri/ecommerce-microservice-backend-app
+sources:
+  - https://github.com/SelimHorri/ecommerce-microservice-backend-app
+maintainers:
+  - name: DevOps Team
+    email: devops@ecommerce.com
+keywords:
+  - kubernetes
+  - microservices
+  - ecommerce
+  - spring-boot
+  - spring-cloud
+dependencies: []

@@ -1,0 +1,95 @@
+# Development environment values
+environment: dev
+
+replicaCount: 1
+
+image:
+  pullPolicy: IfNotPresent
+  tag: "0.1.0-dev"
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+microservices:
+  - name: service-discovery
+    enabled: true
+    replicaCount: 1
+    port: 8761
+  - name: cloud-config
+    enabled: true
+    replicaCount: 1
+    port: 9296
+  - name: api-gateway
+    enabled: true
+    replicaCount: 1
+    port: 8080
+  - name: proxy-client
+    enabled: true
+    replicaCount: 1
+    port: 8900
+  - name: user-service
+    enabled: true
+    replicaCount: 1
+    port: 8700
+    database:
+      enabled: true
+      type: mysql
+      host: mysql.ecommerce-dev.svc.cluster.local
+  - name: product-service
+    enabled: true
+    replicaCount: 1
+    port: 8500
+    database:
+      enabled: true
+      type: mysql
+  - name: favourite-service
+    enabled: true
+    replicaCount: 1
+    port: 8800
+    database:
+      enabled: true
+      type: mysql
+  - name: order-service
+    enabled: true
+    replicaCount: 1
+    port: 8300
+    database:
+      enabled: true
+      type: mysql
+  - name: payment-service
+    enabled: true
+    replicaCount: 1
+    port: 8400
+    database:
+      enabled: true
+      type: mysql
+  - name: shipping-service
+    enabled: true
+    replicaCount: 1
+    port: 8600
+    database:
+      enabled: true
+      type: mysql
+
+configMap:
+  SPRING_PROFILES_ACTIVE: "kubernetes,dev"
+  LOGGING_LEVEL_ROOT: "DEBUG"
+
+secrets:
+  database:
+    username: "ecommerce"
+    password: "ecommerce"
+  jwt:
+    secret: "dev-secret-key-change-in-production"
+    expiration: "86400"

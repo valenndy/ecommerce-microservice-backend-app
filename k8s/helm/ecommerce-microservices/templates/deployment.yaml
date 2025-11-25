@@ -1,0 +1,95 @@
+{{- range .Values.microservices }}
+{{- if .enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: {{ .name }}
+    version: {{ $.Chart.AppVersion }}
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ .replicaCount | default $.Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{ .name }}
+      {{- include "ecommerce.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml $.Values.podAnnotations | nindent 8 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
+      labels:
+        app: {{ .name }}
+        {{- include "ecommerce.selectorLabels" $ | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "ecommerce.fullname" $ }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .name }}
+        {{- if $.Values.image.registry }}
+        image: "{{ $.Values.image.registry }}/{{ $.Values.image.repository }}/{{ .name }}:{{ $.Values.image.tag }}"
+        {{- else }}
+        image: "{{ $.Values.image.repository }}/{{ .name }}:{{ $.Values.image.tag }}"
+        {{- end }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .port }}
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: {{ include "ecommerce.fullname" $ }}-config
+        - secretRef:
+            name: {{ include "ecommerce.fullname" $ }}-secrets
+        env:
+        - name: SERVER_PORT
+          value: {{ .port | quote }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        securityContext:
+          {{- toYaml $.Values.securityContext | nindent 12 }}
+        livenessProbe:
+          {{- toYaml $.Values.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml $.Values.readinessProbe | nindent 12 }}
+        resources:
+          {{- toYaml $.Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+{{- end }}
+{{- end }}

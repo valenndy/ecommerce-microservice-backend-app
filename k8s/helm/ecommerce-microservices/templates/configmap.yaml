@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.configMap }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://service-discovery.{{ .Release.Namespace }}.svc.cluster.local:8761/eureka"
+  SPRING_CLOUD_CONFIG_URI: "http://cloud-config.{{ .Release.Namespace }}.svc.cluster.local:9296"
+  ZIPKIN_BASEURL: "http://zipkin.{{ .Release.Namespace }}.svc.cluster.local:9411"
+  PROMETHEUS_SCRAPE_INTERVAL: "15s"

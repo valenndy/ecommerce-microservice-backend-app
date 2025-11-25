@@ -1,0 +1,123 @@
+# Jaeger Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:1.35
+        ports:
+        - containerPort: 6831
+          name: compact
+          protocol: UDP
+        - containerPort: 6832
+          name: binary
+          protocol: UDP
+        - containerPort: 5778
+          name: serve
+        - containerPort: 16686
+          name: ui
+        - containerPort: 14268
+          name: collector
+        env:
+        - name: COLLECTOR_ZIPKIN_HOST_PORT
+          value: ":9411"
+        - name: MEMORY_MAX_TRACES
+          value: "10000"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+# Jaeger Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: monitoring
+spec:
+  selector:
+    app: jaeger
+  ports:
+  - port: 6831
+    targetPort: 6831
+    protocol: UDP
+    name: compact
+  - port: 6832
+    targetPort: 6832
+    protocol: UDP
+    name: binary
+  - port: 5778
+    targetPort: 5778
+    protocol: TCP
+    name: serve
+  - port: 16686
+    targetPort: 16686
+    protocol: TCP
+    name: ui
+  - port: 14268
+    targetPort: 14268
+    protocol: TCP
+    name: collector
+  - port: 9411
+    targetPort: 9411
+    protocol: TCP
+    name: zipkin
+
+---
+# Zipkin compatibility service
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin
+  namespace: monitoring
+spec:
+  selector:
+    app: jaeger
+  ports:
+  - port: 9411
+    targetPort: 9411
+    protocol: TCP
+    name: zipkin
+
+---
+# Jaeger UI Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger-ingress
+  namespace: monitoring
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - jaeger.ecommerce.local
+    secretName: jaeger-ecommerce-tls
+  rules:
+  - host: jaeger.ecommerce.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jaeger
+            port:
+              number: 16686

@@ -1,0 +1,117 @@
+# JMeter Test Plan Configuration for Load Testing
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jmeter-test-plan
+  namespace: load-testing
+data:
+  test-plan.jmx: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <jmeterTestPlan version="1.2">
+      <hashTree>
+        <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="eCommerce Microservices Load Test" enabled="true">
+          <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="TestPlan.user_define_classpath"></stringProp>
+          <booleanProp name="TestPlan.functional_mode">false</booleanProp>
+          <booleanProp name="TestPlan.serialize_threadgroups">false</booleanProp>
+          <elementProp name="TestPlan.comments" elementType="Comments" guiclass="CommentsPanel" testclass="Comments" testname="Comments" enabled="true">
+            <stringProp name="Comment.text">Load test configuration for eCommerce microservices</stringProp>
+          </elementProp>
+          <hashTree>
+            <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Product Service - Read Heavy" enabled="true">
+              <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+                <booleanProp name="LoopController.continue_forever">false</booleanProp>
+                <stringProp name="LoopController.loops">100</stringProp>
+              </elementProp>
+              <stringProp name="ThreadGroup.num_threads">50</stringProp>
+              <stringProp name="ThreadGroup.ramp_time">10</stringProp>
+              <elementProp name="ThreadGroup.duration_seconds" elementType="longProp" name="ThreadGroup.duration_seconds">
+                <longValue>3600</longValue>
+              </elementProp>
+              <booleanProp name="ThreadGroup.scheduler">false</booleanProp>
+              <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+              <hashTree>
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/products" enabled="true">
+                  <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+                    <collectionProp name="Arguments.arguments"/>
+                  </elementProp>
+                  <stringProp name="HTTPSampler.domain">api-gateway.ecommerce-prod</stringProp>
+                  <stringProp name="HTTPSampler.port">8080</stringProp>
+                  <stringProp name="HTTPSampler.protocol">http</stringProp>
+                  <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+                  <stringProp name="HTTPSampler.path">/app/api/products</stringProp>
+                  <stringProp name="HTTPSampler.method">GET</stringProp>
+                  <booleanProp name="HTTPSampler.follow_redirects">true</booleanProp>
+                  <booleanProp name="HTTPSampler.auto_redirects">false</booleanProp>
+                  <booleanProp name="HTTPSampler.use_keepalive">true</booleanProp>
+                  <booleanProp name="HTTPSampler.DO_MULTIPART_POST">false</booleanProp>
+                  <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+                  <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+                  <stringProp name="HTTPSampler.response_timeout"></stringProp>
+                </HTTPSamplerProxy>
+                <hashTree>
+                  <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+                    <elementProp name="TestElements" elementType="CollectionProp" name="Asserion.test_strings">
+                      <stringProp name="49586">200</stringProp>
+                    </elementProp>
+                    <stringProp name="Assertion.test_type">1</stringProp>
+                    <booleanProp name="Assertion.assume_success">false</booleanProp>
+                    <intProp name="Assertion.test_strings_type">1</intProp>
+                  </ResponseAssertion>
+                  <hashTree/>
+                </hashTree>
+              </hashTree>
+            </ThreadGroup>
+            <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Order Service - Write Heavy" enabled="true">
+              <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+                <booleanProp name="LoopController.continue_forever">false</booleanProp>
+                <stringProp name="LoopController.loops">50</stringProp>
+              </elementProp>
+              <stringProp name="ThreadGroup.num_threads">20</stringProp>
+              <stringProp name="ThreadGroup.ramp_time">10</stringProp>
+              <elementProp name="ThreadGroup.duration_seconds" elementType="longProp" name="ThreadGroup.duration_seconds">
+                <longValue>3600</longValue>
+              </elementProp>
+              <booleanProp name="ThreadGroup.scheduler">false</booleanProp>
+              <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+              <hashTree>
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/orders" enabled="true">
+                  <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+                    <collectionProp name="Arguments.arguments"/>
+                  </elementProp>
+                  <stringProp name="HTTPSampler.domain">api-gateway.ecommerce-prod</stringProp>
+                  <stringProp name="HTTPSampler.port">8080</stringProp>
+                  <stringProp name="HTTPSampler.protocol">http</stringProp>
+                  <stringProp name="HTTPSampler.path">/app/api/orders</stringProp>
+                  <stringProp name="HTTPSampler.method">POST</stringProp>
+                  <booleanProp name="HTTPSampler.follow_redirects">true</booleanProp>
+                  <booleanProp name="HTTPSampler.use_keepalive">true</booleanProp>
+                  <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                    <collectionProp name="Arguments.arguments">
+                      <elementProp name="" elementType="HTTPArgument">
+                        <booleanProp name="HTTPArgument.always_encode">false</booleanProp>
+                        <stringProp name="Argument.name">{"customerId":1,"items":[{"productId":1,"quantity":1}],"shippingAddress":"123 Main St"}</stringProp>
+                        <stringProp name="Argument.value"></stringProp>
+                        <stringProp name="Argument.metadata">=</stringProp>
+                      </elementProp>
+                    </collectionProp>
+                  </elementProp>
+                </HTTPSamplerProxy>
+                <hashTree/>
+              </hashTree>
+            </ThreadGroup>
+          </hashTree>
+        </TestPlan>
+        <hashTree/>
+      </hashTree>
+    </jmeterTestPlan>
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: load-testing
+  labels:
+    name: load-testing

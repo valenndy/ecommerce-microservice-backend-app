@@ -1,0 +1,207 @@
+# Default values for ecommerce-microservices
+replicaCount: 2
+
+image:
+  registry: ""
+  repository: ecommerce
+  pullPolicy: Never
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/actuator/prometheus"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: api.ecommerce.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-ecommerce-tls
+      hosts:
+        - api.ecommerce.local
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# QoS Class
+qosClass: "Burstable"
+
+# Microservices specific configurations
+microservices:
+  serviceDiscovery:
+    name: service-discovery
+    enabled: true
+    replicaCount: 1
+    port: 8761
+  
+  cloudConfig:
+    name: cloud-config
+    enabled: true
+    replicaCount: 1
+    port: 9296
+  
+  apiGateway:
+    name: api-gateway
+    enabled: true
+    replicaCount: 2
+    port: 8080
+  
+  proxyClient:
+    name: proxy-client
+    enabled: true
+    replicaCount: 2
+    port: 8900
+  
+  userService:
+    name: user-service
+    enabled: true
+    replicaCount: 2
+    port: 8700
+    database:
+      enabled: true
+      type: mysql
+  
+  productService:
+    name: product-service
+    enabled: true
+    replicaCount: 2
+    port: 8500
+    database:
+      enabled: true
+      type: mysql
+  
+  favouriteService:
+    name: favourite-service
+    enabled: true
+    replicaCount: 2
+    port: 8800
+    database:
+      enabled: true
+      type: mysql
+  
+  orderService:
+    name: order-service
+    enabled: true
+    replicaCount: 2
+    port: 8300
+    database:
+      enabled: true
+      type: mysql
+  
+  paymentService:
+    name: payment-service
+    enabled: true
+    replicaCount: 2
+    port: 8400
+    database:
+      enabled: true
+      type: mysql
+  
+  shippingService:
+    name: shipping-service
+    enabled: true
+    replicaCount: 2
+    port: 8600
+    database:
+      enabled: true
+      type: mysql
+
+# Configuration Management
+configMap:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  LOGGING_LEVEL_ROOT: "INFO"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+
+# Secret configurations
+secrets:
+  database:
+    username: "ecommerce"
+    password: "ecommerce123"
+  jwt:
+    secret: "ecommerce-jwt-secret-key-change-in-production"
+    expiration: "86400"
+  externalSecrets:
+    enabled: false
+    backend: vault
+
+# NetworkPolicy configuration
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+

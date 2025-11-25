@@ -1,0 +1,135 @@
+# RBAC: ClusterRole para leer ConfigMaps y Secrets
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ecommerce-config-reader
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+
+---
+# RBAC: ClusterRoleBinding para bind con ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ecommerce-config-reader-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ecommerce-config-reader
+subjects:
+- kind: ServiceAccount
+  name: ecommerce-microservices
+  namespace: ecommerce-dev
+- kind: ServiceAccount
+  name: ecommerce-microservices
+  namespace: ecommerce-qa
+- kind: ServiceAccount
+  name: ecommerce-microservices
+  namespace: ecommerce-prod
+
+---
+# Role para acceso a recursos específicos del namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ecommerce-pod-reader
+  namespace: ecommerce-dev
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ecommerce-pod-reader-binding
+  namespace: ecommerce-dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ecommerce-pod-reader
+subjects:
+- kind: ServiceAccount
+  name: ecommerce-microservices
+  namespace: ecommerce-dev
+
+---
+# Role para QA environment
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ecommerce-pod-reader
+  namespace: ecommerce-qa
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ecommerce-pod-reader-binding
+  namespace: ecommerce-qa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ecommerce-pod-reader
+subjects:
+- kind: ServiceAccount
+  name: ecommerce-microservices
+  namespace: ecommerce-qa
+
+---
+# Role para Production environment
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ecommerce-pod-reader
+  namespace: ecommerce-prod
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ecommerce-pod-reader-binding
+  namespace: ecommerce-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ecommerce-pod-reader
+subjects:
+- kind: ServiceAccount
+  name: ecommerce-microservices
+  namespace: ecommerce-prod

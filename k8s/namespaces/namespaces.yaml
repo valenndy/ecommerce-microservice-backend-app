@@ -1,0 +1,36 @@
+# Namespaces para separar ambientes
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-dev
+  labels:
+    environment: development
+    managed-by: helm
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-qa
+  labels:
+    environment: qa
+    managed-by: helm
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-prod
+  labels:
+    environment: production
+    managed-by: helm
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-infrastructure
+  labels:
+    environment: infrastructure
+    managed-by: helm

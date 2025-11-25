@@ -1,0 +1,94 @@
+# QA environment values
+environment: qa
+
+replicaCount: 2
+
+image:
+  pullPolicy: IfNotPresent
+  tag: "0.1.0-qa"
+
+resources:
+  limits:
+    cpu: 400m
+    memory: 384Mi
+  requests:
+    cpu: 200m
+    memory: 192Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+microservices:
+  - name: service-discovery
+    enabled: true
+    replicaCount: 2
+    port: 8761
+  - name: cloud-config
+    enabled: true
+    replicaCount: 2
+    port: 9296
+  - name: api-gateway
+    enabled: true
+    replicaCount: 2
+    port: 8080
+  - name: proxy-client
+    enabled: true
+    replicaCount: 2
+    port: 8900
+  - name: user-service
+    enabled: true
+    replicaCount: 2
+    port: 8700
+    database:
+      enabled: true
+      type: mysql
+  - name: product-service
+    enabled: true
+    replicaCount: 2
+    port: 8500
+    database:
+      enabled: true
+      type: mysql
+  - name: favourite-service
+    enabled: true
+    replicaCount: 2
+    port: 8800
+    database:
+      enabled: true
+      type: mysql
+  - name: order-service
+    enabled: true
+    replicaCount: 2
+    port: 8300
+    database:
+      enabled: true
+      type: mysql
+  - name: payment-service
+    enabled: true
+    replicaCount: 2
+    port: 8400
+    database:
+      enabled: true
+      type: mysql
+  - name: shipping-service
+    enabled: true
+    replicaCount: 2
+    port: 8600
+    database:
+      enabled: true
+      type: mysql
+
+configMap:
+  SPRING_PROFILES_ACTIVE: "kubernetes,qa"
+  LOGGING_LEVEL_ROOT: "INFO"
+
+secrets:
+  database:
+    username: "ecommerce_qa"
+    password: "qa-secure-password"
+  jwt:
+    secret: "qa-secret-key-change-in-production"
+    expiration: "86400"

@@ -1,0 +1,141 @@
+# StorageClass para almacenamiento de bases de datos
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ecommerce-mysql-storage
+provisioner: kubernetes.io/host-path
+allowVolumeExpansion: true
+parameters:
+  replication-factor: "3"
+volumeBindingMode: WaitForFirstConsumer
+
+---
+# PersistentVolumeClaim para MySQL en ambiente Dev
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: ecommerce-dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ecommerce-mysql-storage
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# PersistentVolumeClaim para MySQL en ambiente QA
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: ecommerce-qa
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ecommerce-mysql-storage
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+# PersistentVolumeClaim para MySQL en ambiente Prod
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: ecommerce-prod
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ecommerce-mysql-storage
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+# StatefulSet para MySQL en Dev
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: ecommerce-dev
+spec:
+  serviceName: mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: root-password
+        - name: MYSQL_DATABASE
+          value: "ecommerce"
+        - name: MYSQL_USER
+          value: "ecommerce"
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: user-password
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ecommerce-mysql-storage
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+# Service para MySQL
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: ecommerce-dev
+spec:
+  clusterIP: None
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+
+---
+# Secret para credenciales de MySQL
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-credentials
+  namespace: ecommerce-dev
+type: Opaque
+stringData:
+  root-password: "root-password-change-me"
+  user-password: "ecommerce-password-change-me"
